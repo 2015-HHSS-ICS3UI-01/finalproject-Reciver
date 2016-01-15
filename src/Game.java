@@ -1,5 +1,17 @@
+
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.util.ArrayList;
+import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 
@@ -9,18 +21,68 @@ import javax.swing.JFrame;
  */
 
 
-public class Game extends JComponent{
+public class Game extends JComponent implements KeyListener, MouseMotionListener, MouseListener {
 
     // Height and Width of our game
     static final int WIDTH = 800;
-    static final int HEIGHT = 600;
+    static final int HEIGHT = 800;
     
     // sets the framerate and delay for our game
     // you just need to select an approproate framerate
     long desiredFPS = 60;
     long desiredTime = (1000)/desiredFPS;
+   
+    //Player position variables
+    int x = 100;
+    int y = 500;
     
-
+    //Mouse variables
+    int mouseX = 0;
+    int mouseY = 0;
+   boolean buttonPressed = false;
+   
+   //another player
+   Rectangle player = new Rectangle(0, 200, 50, 50);
+   int moveX = 0;
+   int moveY = 0;
+   boolean inAir = false;
+   
+   //Block 
+   ArrayList<Rectangle> blocks = new ArrayList<>();
+   
+   int gravity = 1;
+   
+   
+   
+   //keyboard variables
+   
+   boolean up = false;
+   boolean down = false;
+   boolean right = false;
+   boolean left = false;
+   boolean jump = false;
+   boolean prevJump = false;
+   private Object BufferedImage;      
+   private BufferedImage img;
+   long timer = 20*1000;
+   long timeRemaining = timer;
+   long gameStart;
+     
+   public BufferedImage loadImage(String filename){
+       BufferedImage = null;
+       try{
+           img = ImageIO.read(new File(filename));
+           
+       }catch(Exception e){
+           System.out.println("Error Loading " + filename);;
+       }
+       return img;
+        
+        
+   }
+   BufferedImage BlockImageBackground = loadImage("gamebackground.png");
+    
+    
     
     // drawing of the game happens in here
     // we use the Graphics object, g, to perform the drawing
@@ -33,6 +95,26 @@ public class Game extends JComponent{
         
         // GAME DRAWING GOES HERE 
         
+        //Make the game background
+        for(int x = 0; x < WIDTH; x = x + 8000){
+            for(int y = 0; y < HEIGHT; y = y + 8000){
+                g.drawImage(BlockImageBackground, x, y, null);
+            }
+        }
+        
+       
+        g.setColor(Color .BLACK);
+        for(Rectangle block: blocks){
+            g.fillRect(block.x, block.y, block.width, block.height);
+        }
+       
+         
+        g.setColor(Color.RED);
+        g.fillRect(player.x, player.y, player.width, player.height);
+        
+        
+        g.drawString("" + (timeRemaining/1000), 50, 100);
+        
         
         // GAME DRAWING ENDS HERE
     }
@@ -41,7 +123,35 @@ public class Game extends JComponent{
     // The main game loop
     // In here is where all the logic for my game will go
     public void run()
-    {
+    {    //things to to before game starts
+        
+        //add blocks  
+        blocks.add(new Rectangle(25,750,200,20));
+        blocks.add(new Rectangle(470,750,200,20));
+        blocks.add(new Rectangle(350,650,200,20));
+        blocks.add(new Rectangle(75,650,200,20));
+        blocks.add(new Rectangle(400,650,200,20));
+        blocks.add(new Rectangle(470,550,200,20));
+        blocks.add(new Rectangle(60,450,200,20));
+        blocks.add(new Rectangle(450,450,200,20));
+        blocks.add(new Rectangle(90,350,200,20));
+        blocks.add(new Rectangle(375,350,200,20));
+        blocks.add(new Rectangle(450,250,200,20));
+        blocks.add(new Rectangle(90,250,200,20));
+        blocks.add(new Rectangle(60,150,200,20));
+        blocks.add(new Rectangle(300,150,200,20));
+        
+        
+        
+        //Second level
+        blocks.add(new Rectangle(100,550,200,20));
+       
+        gameStart = System.currentTimeMillis();
+        
+        
+        
+        //END INITISL THINGS TO DO
+        
         // Used to keep track of time used to draw and update the game
         // This is used to limit the framerate later on
         long startTime;
@@ -52,14 +162,88 @@ public class Game extends JComponent{
         boolean done = false; 
         while(!done)
         {
-            // determines when we started so we can keep a framerate
-            startTime = System.currentTimeMillis();
             
+              // determines when we started so we can keep a framerate
+            startTime = System.currentTimeMillis();
+    
             // all your game rules and move is done in here
             // GAME LOGIC STARTS HERE 
             
+                          
+      
+            timeRemaining = timer - (System.currentTimeMillis() - gameStart);
+            if (timeRemaining <= 0 ){
+                break;
+            }
+            x = mouseX;
+            y = mouseY;
             
-
+            if(left){
+                moveX = -2;
+            }else if(right){
+                moveX =  2;
+            }else{
+                moveX = 0;
+            }
+           
+                
+            
+            //gravity player down
+            moveY = moveY + gravity;
+             
+            //Jumping
+            //jump being pressed and not in air
+            if(jump && prevJump == false && !inAir){
+                //make a big change in y direction
+                moveY = -15;
+                inAir = true;
+            }
+            //Keeps track of jumps
+            prevJump = jump;
+            
+            //move the player
+            player.x = player.x + moveX;
+            player.y = player.y + moveY;
+            
+            //if feet of player become lower then screen
+            if(player.y + player.height > HEIGHT){
+                //stops falling
+                player.y = HEIGHT - player.height;
+                moveY = 0;
+                inAir = false;
+            }
+            
+            //go through all blocks 
+            for(Rectangle block:blocks){
+                //is player hitting the block
+                if(player.intersects(block)){
+                    //get the collision rectangle
+                    Rectangle intersection = player.intersection(block);
+                    
+                    //fix x movement
+                    if (intersection. width < intersection.height){
+                         if(player.x < block.x){
+                             player.x = player.x - intersection.width;
+                             
+                         }else{
+                             player.x = player.x + intersection.width;
+                         }
+                    }else{//fix y
+                        //hitting with head
+                        if(moveY < 0){
+                            player.y = block.y + block.height;
+                            moveY = 0;
+                        }else{
+                           player.y = block.y - player.height;
+                           moveY = 0;
+                           inAir = false;
+                        }
+                    }
+                }
+            }
+            
+          
+            
             // GAME LOGIC ENDS HERE 
             
             // update the drawing (calls paintComponent)
@@ -104,7 +288,81 @@ public class Game extends JComponent{
         // shows the window to the user
         frame.setVisible(true);
         
+        
+        //add listener
+        frame.addKeyListener(game);
+        game.addMouseListener(game);
+        game.addMouseMotionListener(game);
+        
         // starts my game loop
         game.run();
     }
+
+    @Override
+    public void mouseDragged(MouseEvent me) {
+     
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent me) {
+       
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent me) {
+       
+    }
+
+    @Override
+    public void mousePressed(MouseEvent me) {
+      if(me.getButton() == MouseEvent.BUTTON1){
+        buttonPressed = true;
+    } 
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent me) {
+       if(me.getButton() == MouseEvent.BUTTON1){
+        buttonPressed = false;
+    } 
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent me) {
+       
+    }
+
+    @Override
+    public void mouseExited(MouseEvent me) {
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+      
+    }
+
+    @Override
+    public void keyPressed(KeyEvent ke) {
+       int key = ke.getKeyCode();
+        if(key == KeyEvent.VK_LEFT){
+            left = true;
+        }else if(key == KeyEvent.VK_RIGHT){
+            right = true;
+        }else if(key == KeyEvent.VK_SPACE){
+            jump = true;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent ke) {
+          int key = ke.getKeyCode();
+        if(key == KeyEvent.VK_LEFT){
+            left = false;
+        }else if(key == KeyEvent.VK_RIGHT){
+            right = false;
+        }else if(key == KeyEvent.VK_SPACE){
+            jump = false;
+        }
+    }
+    
 }

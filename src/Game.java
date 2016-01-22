@@ -55,15 +55,16 @@ public class Game extends JComponent implements KeyListener, MouseMotionListener
    
    
    //keyboard variables
-   
    boolean up = false;
    boolean down = false;
    boolean right = false;
    boolean left = false;
    boolean jump = false;
    boolean prevJump = false;
-   private Object BufferedImage;      
+   private Object BufferedImage;
+   //Image Variable
    private BufferedImage img;
+   //Timer Variables
    long timer = 20*1000;
    long timeRemaining = timer;
    long gameStart;
@@ -80,8 +81,15 @@ public class Game extends JComponent implements KeyListener, MouseMotionListener
         
         
    }
-   BufferedImage BlockImageBackground = loadImage("gamebackground.png");
+   //Importing all the game graphics for the game
+   BufferedImage BlockImageBackground = loadImage("game_background_by_jesusfc-d3evta1.jpg");
+   BufferedImage CharImage = loadImage("character.png");
+   BufferedImage BlockImage = loadImage("blockss.png");
+   BufferedImage StartScreen = loadImage("StartScreen.png");
+   BufferedImage EndScreen = loadImage("EndScreen.png");
     
+    //Making different screens
+    int level = 0; 
     
     
     // drawing of the game happens in here
@@ -94,27 +102,34 @@ public class Game extends JComponent implements KeyListener, MouseMotionListener
         g.clearRect(0, 0, WIDTH, HEIGHT);
         
         // GAME DRAWING GOES HERE 
-        
-        //Make the game background
-        for(int x = 0; x < WIDTH; x = x + 8000){
-            for(int y = 0; y < HEIGHT; y = y + 8000){
-                g.drawImage(BlockImageBackground, x, y, null);
-            }
+        //
+        if(level == 0){
+            g.drawImage(StartScreen, 0, 0, null);
         }
-        
-       
+        if(level==1){
+            
+     
+        //Make the game background
+        g.drawImage(BlockImageBackground, 0, 0,WIDTH, HEIGHT, null);
+   
+       //Making all the blocks
         g.setColor(Color .BLACK);
         for(Rectangle block: blocks){
-            g.fillRect(block.x, block.y, block.width, block.height);
+            //The  Graphics for the blocks
+            g.drawImage(BlockImage, block.x, block.y, block.width, block.height, null);
         }
        
-         
+        //Make character
         g.setColor(Color.RED);
-        g.fillRect(player.x, player.y, player.width, player.height);
+        g.drawImage(CharImage ,player.x, player.y, player.width, player.height, null);
         
-        
+        //Timer
         g.drawString("" + (timeRemaining/1000), 50, 100);
-        
+        }
+        //make end screen and when the timer stops the end screen is displayed
+        if(timeRemaining <=0){
+            g.drawImage(EndScreen, 0, 0, null);
+        }
         
         // GAME DRAWING ENDS HERE
     }
@@ -170,11 +185,9 @@ public class Game extends JComponent implements KeyListener, MouseMotionListener
             // GAME LOGIC STARTS HERE 
             
                           
-      
+            //making the timeremaining
             timeRemaining = timer - (System.currentTimeMillis() - gameStart);
-            if (timeRemaining <= 0 ){
-                break;
-            }
+           //Movement
             x = mouseX;
             y = mouseY;
             
@@ -229,7 +242,7 @@ public class Game extends JComponent implements KeyListener, MouseMotionListener
                              player.x = player.x + intersection.width;
                          }
                     }else{//fix y
-                        //hitting with head
+                        //hitting with head so the char doesnt go through the bottom
                         if(moveY < 0){
                             player.y = block.y + block.height;
                             moveY = 0;
@@ -240,7 +253,7 @@ public class Game extends JComponent implements KeyListener, MouseMotionListener
                         }
                     }
                 }
-            }
+            } 
             
           
             
@@ -343,6 +356,7 @@ public class Game extends JComponent implements KeyListener, MouseMotionListener
 
     @Override
     public void keyPressed(KeyEvent ke) {
+        //Movement for the character wuith arrows
        int key = ke.getKeyCode();
         if(key == KeyEvent.VK_LEFT){
             left = true;
@@ -351,10 +365,16 @@ public class Game extends JComponent implements KeyListener, MouseMotionListener
         }else if(key == KeyEvent.VK_SPACE){
             jump = true;
         }
+        //If the space bar is held it starts the game once released
+        if(key == KeyEvent.VK_SPACE){
+            level = 1;
+            
+        }
     }
 
     @Override
     public void keyReleased(KeyEvent ke) {
+        //Making the movement for the arrows
           int key = ke.getKeyCode();
         if(key == KeyEvent.VK_LEFT){
             left = false;
@@ -363,6 +383,11 @@ public class Game extends JComponent implements KeyListener, MouseMotionListener
         }else if(key == KeyEvent.VK_SPACE){
             jump = false;
         }
+        //On lvl 1 if the space bar is released the game starts
+        if(key == KeyEvent.VK_SPACE){
+            level = 1;
+        }
+            
     }
     
 }

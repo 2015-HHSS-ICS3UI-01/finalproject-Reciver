@@ -103,9 +103,12 @@ public class Game extends JComponent implements KeyListener, MouseMotionListener
         
         // GAME DRAWING GOES HERE 
         //
+        
+        //Displaying the start screen
         if(level == 0){
             g.drawImage(StartScreen, 0, 0, null);
         }
+        //where the actual game begins
         if(level==1){
             
      
